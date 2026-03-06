@@ -4,47 +4,37 @@
 // import { Server } from "socket.io";
 // import cors from "cors";
 // import dotenv from "dotenv";
-// import cookieParser from "cookie-parser";
-
-// import connectDB from "./config/db.js";
 // import authRoutes from "./routes/authRoutes.js";
 // import taskRoutes from "./routes/taskRoutes.js";
+// import connectDB from "./config/db.js";
 
 // dotenv.config();
 
-// connectDB();
-
 // const app = express();
+// const server = http.createServer(app);
 
-// // Middleware
+// //middleware
+
 // app.use(
 //   cors({
 //     origin: "http://localhost:5173",
 //     credentials: true,
 //   })
 // );
-
 // app.use(express.json());
-// app.use(cookieParser());
 
-// // Routes
-// app.use("/api/auth", authRoutes);
-// app.use("/api/tasks", taskRoutes);
+// connectDB();
 
-// app.get("/", (req, res) => {
-//   res.send("API Running...");
-// });
-
-// // Create server
-// const server = http.createServer(app);
-
-// // Socket
-// const io = new Server(server, {
+// // socket setup
+// export const io = new Server(server, {
 //   cors: {
-//     origin: "http://localhost:5173",
-//     credentials: true,
+//     origin: "*",
 //   },
 // });
+
+// // routes
+// app.use("/api/auth", authRoutes);
+// app.use("/api/tasks", taskRoutes);
 
 // io.on("connection", (socket) => {
 //   console.log("User connected:", socket.id);
@@ -65,30 +55,45 @@ import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+
+import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
-import connectDB from "./config/db.js";
 
 dotenv.config();
+
+connectDB();
 
 const app = express();
 const server = http.createServer(app);
 
-app.use(cors());
+// middleware
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
-
-connectDB();
-
-// socket setup
-export const io = new Server(server, {
-  cors: {
-    origin: "*",
-  },
-});
+app.use(cookieParser());
 
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
+
+app.get("/", (req, res) => {
+  res.send("API Running...");
+});
+
+// socket setup
+export const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true,
+  },
+});
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);

@@ -1,67 +1,77 @@
 import { useState } from "react";
 import API from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
-function Login() {
+export default function Login() {
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const [email,setEmail] = useState("");
+  const [password,setPassword] = useState("");
+  const [loading,setLoading] = useState(false);
+
+  const handleSubmit = async (e)=>{
     e.preventDefault();
 
-    try {
+    if(!email || !password){
+      alert("All fields required");
+      return;
+    }
 
-      await API.post("/auth/login", {
+    try{
+      setLoading(true);
+
+      const res = await API.post("/auth/login",{
         email,
         password
       });
 
-      alert("Login successful");
+      console.log(res.data);
 
-    } catch (error) {
-      alert("Login failed");
+      navigate("/dashboard");
+
+    }catch(err){
+      console.log(err.response?.data);
+      alert(err.response?.data?.message || "Login Failed");
+    }finally{
+      setLoading(false);
     }
-  };
+  }
 
-  return (
-
-    <div className="flex items-center justify-center h-screen bg-gray-100">
+  return(
+    <div className="flex justify-center items-center h-screen">
 
       <form
-        onSubmit={handleLogin}
-        className="bg-white p-8 rounded-lg shadow-md w-96"
+        onSubmit={handleSubmit}
+        className="border p-6 rounded w-80"
       >
 
-        <h2 className="text-2xl font-bold mb-6 text-center">
-          Login
-        </h2>
+        <h2 className="text-2xl mb-4 font-bold">Login</h2>
 
         <input
           type="email"
           placeholder="Email"
-          className="w-full p-2 border mb-4 rounded"
+          className="border p-2 w-full mb-3"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e)=>setEmail(e.target.value)}
         />
 
         <input
           type="password"
           placeholder="Password"
-          className="w-full p-2 border mb-4 rounded"
+          className="border p-2 w-full mb-3"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e)=>setPassword(e.target.value)}
         />
 
         <button
-          className="w-full bg-blue-500 text-white p-2 rounded"
+          className="bg-blue-500 text-white w-full p-2"
         >
-          Login
+          {loading ? "Logging..." : "Login"}
         </button>
 
       </form>
 
     </div>
-  );
+  )
 }
-
-export default Login;
