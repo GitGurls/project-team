@@ -100,6 +100,106 @@
 
 // export default router;
 
+// import express from "express";
+// import bcrypt from "bcryptjs";
+// import jwt from "jsonwebtoken";
+// import User from "../models/User.js";
+// import { protect } from "../middleware/authMiddleware.js";
+
+// const router = express.Router();
+
+// const isProduction = process.env.NODE_ENV === "production";
+
+// // REGISTER
+// router.post("/register", async (req, res) => {
+//   try {
+//     const { name, email, password } = req.body;
+
+//     const userExists = await User.findOne({ email });
+//     if (userExists) {
+//       return res.status(400).json({ message: "User already exists" });
+//     }
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const user = await User.create({
+//       name,
+//       email,
+//       password: hashedPassword,
+//     });
+
+//     res.status(201).json({
+//       message: "User registered successfully",
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
+// // LOGIN
+// router.post("/login", async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.status(400).json({ message: "Invalid credentials" });
+//     }
+
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch) {
+//       return res.status(400).json({ message: "Invalid credentials" });
+//     }
+
+//     const token = jwt.sign(
+//       { id: user._id, role: user.role },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "1d" }
+//     );
+
+//     // ✅ Production ke liye secure + sameSite none
+//     res.cookie("token", token, {
+//       httpOnly: true,
+//       secure: isProduction,           // production me true, local me false
+//       sameSite: isProduction ? "none" : "strict", // cross-domain ke liye none
+//       maxAge: 24 * 60 * 60 * 1000,
+//     });
+
+//     res.status(200).json({
+//       message: "Login successful",
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// });
+
+// router.get("/me", protect, (req, res) => {
+//   res.status(200).json({
+//     user: req.user,
+//   });
+// });
+
+// // LOGOUT
+// router.post("/logout", (req, res) => {
+//   res.cookie("token", "", {
+//     httpOnly: true,
+//     secure: isProduction,
+//     sameSite: isProduction ? "none" : "strict",
+//     expires: new Date(0),
+//   });
+
+//   res.status(200).json({
+//     message: "Logged out successfully",
+//   });
+// });
+
+// export default router;
+
+
+
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -121,16 +221,9 @@ router.post("/register", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    await User.create({ name, email, password: hashedPassword });
 
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
-
-    res.status(201).json({
-      message: "User registered successfully",
-    });
+    res.status(201).json({ message: "User registered successfully" });
 
   } catch (error) {
     console.error(error);
@@ -144,14 +237,10 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -159,17 +248,16 @@ router.post("/login", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // ✅ Production ke liye secure + sameSite none
+    // ✅ Cross-domain cookie fix
     res.cookie("token", token, {
       httpOnly: true,
-      secure: isProduction,           // production me true, local me false
-      sameSite: isProduction ? "none" : "strict", // cross-domain ke liye none
+      secure: true,           // HTTPS zaroor chahiye — Render + Vercel dono HTTPS hain ✅
+      sameSite: "none",       // Cross-domain ke liye none mandatory hai
       maxAge: 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
-    res.status(200).json({
-      message: "Login successful",
-    });
+    res.status(200).json({ message: "Login successful" });
 
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
@@ -177,23 +265,19 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/me", protect, (req, res) => {
-  res.status(200).json({
-    user: req.user,
-  });
+  res.status(200).json({ user: req.user });
 });
 
 // LOGOUT
 router.post("/logout", (req, res) => {
   res.cookie("token", "", {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "strict",
+    secure: true,
+    sameSite: "none",
     expires: new Date(0),
+    path: "/",
   });
-
-  res.status(200).json({
-    message: "Logged out successfully",
-  });
+  res.status(200).json({ message: "Logged out successfully" });
 });
 
 export default router;
