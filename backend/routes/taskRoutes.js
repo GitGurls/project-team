@@ -29,9 +29,7 @@ router.post("/", protect, async (req, res) => {
 
     res.status(201).json(task);
 
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
+
 }catch (error) {
   console.log("TASK ERROR:", error);
   res.status(500).json({ message: error.message });
@@ -95,7 +93,7 @@ router.put("/:id", protect, async (req, res) => {
 
     const updatedTask = await task.save();
 
-    // 🔥 Real-time event
+    //  Real-time event
     io.emit("taskUpdated", updatedTask);
 
     res.json(updatedTask);
@@ -121,7 +119,7 @@ router.delete("/:id", protect, async (req, res) => {
 
     await task.deleteOne();
 
-    // 🔥 Real-time event
+    //  Real-time event
     io.emit("taskDeleted", req.params.id);
 
     res.json({ message: "Task deleted successfully" });
@@ -159,7 +157,7 @@ router.patch("/:id/status", protect, async (req, res) => {
 
     const updatedTask = await task.save();
 
-    // 🔥 Real-time event
+    //  Real-time event
     io.emit("taskStatusUpdated", updatedTask);
 
     res.json(updatedTask);
